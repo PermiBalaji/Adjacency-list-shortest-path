@@ -3,10 +3,8 @@
 #include <list>
 #include <queue>
 #include <limits.h>
-#include <map>
 #include <fstream>
 #include <sstream>
-#include <string>
 
 using namespace std;
 
@@ -17,7 +15,7 @@ public:
     Edge(int t, int w) : target(t), weight(w) {}
 };
 
-// Function to find the vertex with minimum distance value, from the set of vertices not yet included in shortest path tree
+// Function to find the vertex with minimum distance value, from the set of vertices not yet included in the shortest path tree
 int minDistance(const vector<int>& dist, const vector<bool>& visited) {
     int min = INT_MAX, min_index;
 
@@ -57,58 +55,40 @@ void printSolution(const vector<int>& dist) {
 }
 
 // Function to populate the adjacency list from a file
-void readGraph(const string& filename, vector<list<Edge>>& adjList, map<string, int>& townToVertex) {
+void readGraph(const string& filename, vector<list<Edge>>& adjList) {
     ifstream file(filename);
     string line;
-    int vertexCount = 0;
 
     while (getline(file, line)) {
         istringstream ss(line);
-        string from, to;
-        int weight;
+        int from, to, weight;
 
         ss >> from >> to >> weight;
 
-        if (townToVertex.find(from) == townToVertex.end()) {
-            townToVertex[from] = vertexCount++;
-            adjList.push_back(list<Edge>());
-        }
-        if (townToVertex.find(to) == townToVertex.end()) {
-            townToVertex[to] = vertexCount++;
-            adjList.push_back(list<Edge>());
+        if (adjList.size() <= max(from, to)) {
+            adjList.resize(max(from, to) + 1);
         }
 
-        adjList[townToVertex[from]].push_back(Edge(townToVertex[to], weight));
+        adjList[from].push_back(Edge(to, weight));
     }
 }
 
 int main() {
     vector<list<Edge>> adjList;
-    map<string, int> townToVertex;
 
     // Read the graph from a file
-    readGraph("towns.txt", adjList, townToVertex);
-
-    // Map for reverse lookup to print results
-    map<int, string> vertexToTown;
-    for (const auto& pair : townToVertex) {
-        vertexToTown[pair.second] = pair.first;
-    }
+    readGraph("towns.txt", adjList);
 
     // Source town for shortest path
-    string sourceTown = "A"; // Replace with the actual source town name
-    int src = townToVertex[sourceTown];
-
+    int sourceTown = 0; // Replace with the actual source town number
     vector<int> dist(adjList.size(), INT_MAX);
 
     // Run Dijkstra's algorithm
-    dijkstra(adjList, src, dist);
+    dijkstra(adjList, sourceTown, dist);
 
     // Print the shortest distances
     cout << "Shortest distances from " << sourceTown << ":" << endl;
-    for (int i = 0; i < dist.size(); i++) {
-        cout << vertexToTown[i] << " : " << dist[i] << endl;
-    }
+    printSolution(dist);
 
     return 0;
 }
